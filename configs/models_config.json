@@ -1,0 +1,42 @@
+{
+  "providers": {
+    "google": {
+      "url": "https://generativelanguage.googleapis.com",
+      "main": "gemini-2.0-flash",
+      "code": "gemini-2.0-flash",
+      "image": "gemini-2.0-pro"
+    },
+    "nvidia": {
+      "url": "https://integrate.api.nvidia.com/v1",
+      "main": "meta/llama-3.1-405b-instruct",
+      "code": "meta/llama-3.1-70b-instruct"
+    },
+    "openrouter": {
+      "url": "https://openrouter.ai/api/v1",
+      "main": "anthropic/claude-3-5-sonnet",
+      "code": "deepseek/deepseek-coder"
+    },
+    "deepseek": {
+      "url": "https://api.deepseek.com",
+      "main": "deepseek-chat",
+      "code": "deepseek-coder"
+    },
+    "siliconflow": {
+      "url": "https://api.siliconflow.cn/v1",
+      "main": "deepseek-v3",
+      "image": "black-forest-labs/FLUX.1-dev"
+    },
+    "zhipu": {
+      "url": "https://open.bigmodel.cn/api/paas/v4",
+      "main": "glm-4"
+    },
+    "mistral": {
+      "url": "https://api.mistral.ai/v1",
+      "code": "codestral-latest"
+    },
+    "moonshot": {
+      "url": "https://api.moonshot.cn/v1",
+      "main": "moonshot-v1-128k"
+    }
+  }
+}
