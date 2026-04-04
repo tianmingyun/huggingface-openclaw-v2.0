@@ -16,8 +16,7 @@ RUN mkdir -p /home/node/app/configs && \
     chown -R node:node /home/node
 
 USER node
-RUN npm install openclaw@latest @larksuiteoapi/node-sdk --no-audit --no-fund && \
-    npm install grammy @slack/web-api --no-audit --no-fund
+RUN npm install openclaw@latest @larksuiteoapi/node-sdk grammy @slack/web-api @slack/bolt --no-audit --no-fund
 
 COPY --chown=node:node configs/ ./configs/
 COPY --chown=node:node start.sh ./start.sh
