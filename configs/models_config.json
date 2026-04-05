@@ -2,9 +2,11 @@
   "providers": {
     "google": {
       "url": "https://generativelanguage.googleapis.com",
-      "main": "gemini-2.0-flash",
-      "code": "gemini-2.0-flash",
-      "image": "gemini-2.0-pro"
+      "models": [
+        {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash"},
+        {"id": "gemini-2.0-pro", "name": "Gemini 2.0 Pro"},
+        {"id": "imagen-3.0-generate-001", "name": "Imagen 3 (Text-to-Image)"}
+      ]
     },
     "nvidia": {
       "baseUrl": "https://integrate.api.nvidia.com/v1",
