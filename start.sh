@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # ==========================================
-# OpenClaw 4.1 (2026.4.1) 极简稳定版
+# OpenClaw 2026.4.5 最新版
 # 策略：JSON 保持最简，权限交给 exec-approvals.json
+# 更新：支持 v2026.4.5 新配置格式
 # ==========================================
 
 OC_HOME="/home/node/.openclaw"
@@ -157,7 +158,11 @@ cat > "$OC_HOME/exec-approvals.json" << EOF
 }
 EOF
 
-echo "--- 💾 5. 同步与启动 ---"
+echo "--- 💾 5. 修复配置兼容性 (OpenClaw 2026.4.5) ---"
+# v2026.4.5 需要运行 doctor --fix 来迁移旧配置格式
+openclaw doctor --fix || echo "[DOCTOR] Config migration completed or not needed."
+
+echo "--- 💾 6. 同步与启动 ---"
 # 注意：先执行同步，再启动。防止同步回来的旧配置覆盖了我们刚刚生成的干净配置
 python3 sync.py restore || echo "[SYNC] Starting fresh."
 
