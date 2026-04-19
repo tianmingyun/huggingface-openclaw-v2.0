@@ -7,7 +7,7 @@ WORKDIR $APP_HOME
 
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates python3 python3-pip curl && \
+    ca-certificates python3 python3-pip curl git && \
     pip3 install --no-cache-dir huggingface_hub --break-system-packages && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -22,6 +22,7 @@ RUN npm install openclaw@latest @larksuiteoapi/node-sdk --no-audit --no-fund && 
 COPY --chown=node:node configs/ ./configs/
 COPY --chown=node:node start.sh ./start.sh
 COPY --chown=node:node sync.py ./sync.py
+COPY --chown=node:node backup_controller.py ./backup_controller.py
 
 RUN chmod +x ./start.sh
 

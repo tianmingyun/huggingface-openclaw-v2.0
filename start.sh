@@ -30,7 +30,6 @@ output = {"providers": {}}
 for p_id, p_info in cfg.get('providers', {}).items():
     api_key = os.getenv(key_map.get(p_id, ""))
     if api_key:
-        # 支持直接定义的 models 列表或从 main/code/image 角色构建
         if 'models' in p_info:
             models_list = p_info['models']
         elif 'main' in p_info:
@@ -40,7 +39,6 @@ for p_id, p_info in cfg.get('providers', {}).items():
         
         url = p_info.get('url') or p_info.get('baseUrl')
         provider_config = {"baseUrl": url, "apiKey": api_key, "models": models_list}
-        # 添加 api 字段（如 openai-completions）
         if 'api' in p_info:
             provider_config['api'] = p_info['api']
         output["providers"][p_id] = provider_config
@@ -57,10 +55,8 @@ base = "/home/node/.openclaw"
 hf_origin = os.getenv('HF_ORIGIN', '')
 chat_model = os.getenv('CHAT_MODEL', 'gemini-2.0-flash')
 
-# 允许用户通过环境变量自定义默认供应商和模型
-default_provider = os.getenv('DEFAULT_PROVIDER', 'google')  # 可选: google, deepseek, siliconflow, openrouter, zhipu, mistral, moonshot, nvidia
+default_provider = os.getenv('DEFAULT_PROVIDER', 'google')
 chat_model = os.getenv('CHAT_MODEL', 'gemini-2.0-flash')
-# 如果 chat_model 已包含 provider 前缀，则不再重复添加
 if chat_model.startswith(f"{default_provider}/"):
     model_name = chat_model
 else:
@@ -145,7 +141,6 @@ with open(f"{base}/openclaw.json", 'w') as f:
 PYTHON_EOF
 
 echo "--- 🛡️ 4. 强制物理授权 (解决 4.1 配对拦截) ---"
-# 4.1 会自动读取此文件，将 127.0.0.1 (内部调用) 设为最高信任
 cat > "$OC_HOME/exec-approvals.json" << EOF
 {
   "allow": {
@@ -159,21 +154,23 @@ cat > "$OC_HOME/exec-approvals.json" << EOF
 EOF
 
 echo "--- 💾 5. 修复配置兼容性 (OpenClaw 2026.4.5) ---"
-# v2026.4.5 需要运行 doctor --fix 来迁移旧配置格式
 openclaw doctor --fix || echo "[DOCTOR] Config migration completed or not needed."
 
 echo "--- 💾 6. 同步与启动 ---"
-# 注意：先执行同步，再启动。防止同步回来的旧配置覆盖了我们刚刚生成的干净配置
-python3 sync.py restore || echo "[SYNC] Starting fresh."
+if [ -n "$RESTORE_DATE" ]; then
+    echo "[SYNC] Restoring to date: $RESTORE_DATE"
+    python3 sync.py restore "$RESTORE_DATE" || echo "[SYNC] Restore failed, starting fresh."
+else
+    echo "[SYNC] Restoring latest backup..."
+    python3 sync.py restore || echo "[SYNC] Starting fresh."
+fi
 
-# 再次确认配置正确写入（防止被旧配置覆盖）
 python3 << 'VERIFY_EOF'
 import json, os, sys
 
 base = "/home/node/.openclaw"
 default_provider = os.getenv('DEFAULT_PROVIDER', 'google')
 chat_model = os.getenv('CHAT_MODEL', 'gemini-2.0-flash')
-# 如果 chat_model 已包含 provider 前缀，则不再重复添加
 if chat_model.startswith(f"{default_provider}/"):
     expected_model = chat_model
 else:
@@ -189,7 +186,6 @@ try:
         print(f"[警告] 配置不匹配！期望: {expected_model}, 实际: {actual_model}", file=sys.stderr)
         print(f"[警告] 正在重新写入正确配置...", file=sys.stderr)
         
-        # 重新写入正确配置
         config['agents']['defaults']['model']['primary'] = expected_model
         for agent in config['agents']['list']:
             agent['model']['primary'] = expected_model
@@ -206,6 +202,12 @@ except Exception as e:
     print(f"[错误] 验证配置时出错: {e}", file=sys.stderr)
 VERIFY_EOF
 
-(while true; do sleep 10800; python3 sync.py backup; done) &
+# 启动智能备份控制器（方案B：变化检测 + 2小时强制备份）
+echo "[BACKUP] Starting intelligent backup controller (Strategy B)..."
+echo "[BACKUP] - Change detection: every 5 minutes"
+echo "[BACKUP] - Max interval: 2 hours (forced backup)"
+echo "[BACKUP] - Min interval: 5 minutes (avoid duplicates)"
+echo "[BACKUP] - Retention: 180 days"
+python3 /home/node/app/backup_controller.py &
 
 exec openclaw gateway run --port 7860 --token "openclaw-hf-space-token-2026" --allow-unconfigured
