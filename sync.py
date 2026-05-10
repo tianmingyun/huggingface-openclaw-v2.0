@@ -165,7 +165,7 @@ def backup():
         print(f"[BACKUP] Creating: {name}")
         
         with tarfile.open(f"/tmp/{name}", "w:gz") as tar:
-            for d in ["sessions", "workspace", "agents"]:
+            for d in ["sessions", "workspace", "agents", "skills"]:
                 p = Path(base) / d
                 if p.exists():
                     tar.add(p, arcname=d)
@@ -211,8 +211,7 @@ def cleanup_old_backups():
 def list_backups():
     """列出所有备份"""
     backups = get_backup_files(days=180)
-    print(f"\n📦 Found {len(backups)} backups (180 days retention):
-")
+    print(f"\n📦 Found {len(backups)} backups (180 days retention):\n")
     for b in backups:
         print(f"  📅 {b['date']} - {b['filename']}")
     return backups

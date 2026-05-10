@@ -93,14 +93,30 @@ def has_changes():
                     except:
                         continue
         
+        # 检查skills目录（通过webchat/agent安装的skill）
+        skills_dir = Path(BASE_DIR) / "skills"
+        if skills_dir.exists():
+            for root, dirs, files in os.walk(skills_dir):
+                for file in files:
+                    try:
+                        if os.path.getmtime(os.path.join(root, file)) > cutoff:
+                            return True
+                    except:
+                        continue
+        
         return False
     except Exception as e:
         print(f"[BACKUP-CONTROL] Error checking changes: {e}")
         return False
 
-def do_backup(reason="change-detected"):
-    """执行备份"""
-    if not should_backup():
+def do_backup(reason="change-detected", force=False):
+    """执行备份
+    
+    Args:
+        reason: 备份触发原因，用于日志
+        force: 是否强制备份（绕过5分钟间隔限制）
+    """
+    if not force and not should_backup():
         print(f"[BACKUP-CONTROL] Skipping backup, too soon (reason: {reason})")
         return False
     
@@ -190,8 +206,8 @@ def backup_control_loop():
                 print(f"[BACKUP-CONTROL] No changes in last 5 minutes")
 
 def manual_backup():
-    """手动触发备份"""
-    return do_backup(reason="manual")
+    """手动触发备份（强制执行，不受5分钟间隔限制）"""
+    return do_backup(reason="manual", force=True)
 
 def main():
     """主函数"""
